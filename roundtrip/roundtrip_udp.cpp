@@ -12,4 +12,8 @@ struct Message
 
 static_assert(sizeof(Message) == 16, "Message size should be 16 bytes");
 
-int
+int64_t now()
+{
+    struct timeval tv = {0, 0};
+    gettimeofday()
+}
