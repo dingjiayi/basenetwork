@@ -15,5 +15,5 @@ class noncopyable
 
 struct copyable
 {
-
+    
 };
