@@ -1,5 +1,5 @@
 /*
- Copyright 2010, Junyi Liu. All rights reserved.
+ Copyright 2018, Junyi Liu. All rights reserved.
 */
 #pragma once
 

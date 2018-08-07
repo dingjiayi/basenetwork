@@ -47,3 +47,55 @@ int sockets::createNonblockingOrDie()
 
     return sockfd;
 }
+
+void sockets::bindOrDie(int sockfd, const struct sockaddr_in& addr )
+{
+    int ret = bind(sockfd, sockaddr_cast(&addr), sizeof addr);
+    assert(ret ==0 , "sockets::bindOrDie");
+}
+
+void sockets::listenOrDie(int sockfd)
+{
+    // 注意第二个参数设置的是established的最大队列长度
+    // 当然内核 sys.net.core.somaxconn 也对该值得上限做了限制
+    int ret = listen(sockfd, SOMAXCONN);
+    assert(ret == 0, "sockets::listenOrDie");
+}
+
+int sockets::accept(int sockfd, struct sockaddr_in* addr)
+{
+    socklen_t addrlen = sizeof *addr;
+
+#if VALGRIND 
+    int connfd = accept(sockfd, sockaddr_cast(addr), &addrlen);
+    setNonBlockAndCloseOnExec(connfd);
+#else
+    int connfd = accept4(sockfd, sockaddr_cast(addr), &addrlen, SOCK_NONBLOCK | SOCK_CLOEXEC);
+#endif
+    if (connfd < 0)
+    {
+        int savedErrno == errno;
+        std::cerr << "Socket::accept\n";
+        switch (savedErrno)
+        {
+            case EAGAIN:
+            case ECONNABORTED:
+            case EINTR:
+            case EPROTO:
+            case EPERM:
+            case EMFILE: // per-process limit of open file desctiptor
+                // expected errors
+                errno = savedErrno;
+                break;
+            case EBADF:
+            case EFAULT:
+            case EINVAL:
+            case ENOBUFS:
+            case ENOMEM:
+            case ENOTSOCK:
+            case EOPNOTSUPP:
+                // unexpected errors
+                assert(false, "unexpected")
+        }
+    }
+}
